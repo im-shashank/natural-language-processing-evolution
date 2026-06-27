@@ -4,6 +4,8 @@ Hey there! Welcome to this simple, character-level bigram language model built f
 
 If you've ever wondered how neural networks learn to generate text, this project is a perfect starting point. Instead of generating whole sentences like ChatGPT, this model learns to generate novel words, character by character, by studying the statistical patterns in a dataset of names.
 
+Also, this model get's trained on GPU instead of CPU
+
 ## What does it do?
 At its core, this model asks a very simple question: *"Given the current character, what is the most likely next character?"* It uses a 1-layer neural network (essentially a learnable lookup table) to figure out the probabilities of character transitions. For example, if the current letter is `q`, the network learns that the next letter is almost certainly going to be `u`. 
 
