@@ -7,7 +7,7 @@ from training_set import *
 device = torch.device("cuda" if torch.cuda.is_available()
                       else "mps" if torch.backends.mps.is_available()
                          else "cpu")
-print(f"Training on device: {device}")
+print(f"Device being used: {device}")
 
 class BigramLanguageModel:
     """
