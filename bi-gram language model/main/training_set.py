@@ -21,7 +21,7 @@ class TrainingSet:
         
         Loads words from the names.txt file and creates a tokenizer instance.
         """
-        self.words = open('resources/names.txt', 'r').read().splitlines()
+        self.words = open('bi-gram language model/resources/names.txt', 'r').read().splitlines()
         self.tokenizer = Tokenizer(self.words)
         self.device = device
 

@@ -2,12 +2,9 @@ import torch
 from bigram_language_model import *
 from weight_manager import WeightManager
 
-# Define the device (matching your language model setup)
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-
 # Initialize the model and the weight manager
 blm = BigramLanguageModel()
-weight_manager = WeightManager(filepath="bigram_weights.pt")
+weight_manager = WeightManager(filepath="bi-gram language model/bigram_weights.pt")
 
 # Attempt to load existing weights
 weights_exist = weight_manager.load_weights(blm, device)
