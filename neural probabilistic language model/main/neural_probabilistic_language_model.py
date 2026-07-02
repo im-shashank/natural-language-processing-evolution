@@ -48,7 +48,7 @@ class NeuralProbabilisticLanguageModel:
         loss = self.calculate_loss(probabilities=probabilities, 
                                    probabilities_size=probabilities.shape[0], 
                                    Y=embedding[1])
-        print(f"loss = {loss}")
+        print(f"current loss = {loss}")
         print(f"total number of parameters = {sum(p.nelement() for p in self.parameters)}")
 
     def calculate_loss(self, probabilities, probabilities_size, Y):
