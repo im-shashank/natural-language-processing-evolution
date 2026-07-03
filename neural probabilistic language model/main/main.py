@@ -4,7 +4,7 @@ from weight_manager import *
 # Initialize the model and weight manager
 npblm = NeuralProbabilisticLanguageModel()
 
-npblm.train_model()
+npblm(train_model=True, validate_model=True, test_model=True)
 
 # TODO: Weight manager needs to implemented to save and load weights
 # weight_manager = WeightManager(filepath="neural probabilistic language model/neural_probabilistic_language_model_weights.pt")
