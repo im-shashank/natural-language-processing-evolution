@@ -16,6 +16,10 @@ class NeuralProbabilisticLanguageModel:
         self.words = open('bi-gram language model/resources/names.txt', 'r').read().splitlines()
         self.tokenizer = Tokenizer(self.words)
 
+        ###########################################################################
+        ################# Tweak below parameters to min-max loss ##################
+        ###########################################################################
+
         # below three variables are used to control the number of paramters
         # tweek these parameters to increase the number of parameters
         self.context_length = 5
@@ -26,9 +30,14 @@ class NeuralProbabilisticLanguageModel:
         self.learning_iteration = 400000
         self.acceptable_loss = 1.8
         self.learning_rate = -0.1
-        self.training_batch_size = 5000
+        self.training_batch_size = 10000
         self.learning_rate_decay_check_interval = 10000
         self.learning_rate_decay_check_interval_decrementer = 100
+        self.number_of_words_to_sample_from_model = 20
+
+        ###########################################################################
+        ###########################################################################
+        ###########################################################################
 
         # a manual generator to keep the outputs same throughtout multiple runs
         self.generator = torch.Generator(device=device).manual_seed(2147483647)
@@ -84,7 +93,9 @@ class NeuralProbabilisticLanguageModel:
             print("************* test start *************\n")
             loss = self.test_model(X=Xte, Y=Yte)
             print(f"loss on test dataset is: {loss}\n")
-        print(f"total number of parameters is: {sum(p.nelement() for p in self.parameters)}")
+        
+        print("output sampled from model is:")
+        self.sample_from_model()
 
     def test_model(self, X, Y):
         #Forward pass
@@ -138,8 +149,21 @@ class NeuralProbabilisticLanguageModel:
         return loss        
     
     def sample_from_model(self):
-        #TODO
-        pass
+        for _ in range(self.number_of_words_to_sample_from_model):
+            out = []
+            context = [0] * self.context_length # initialize with all ...
+            while True:
+                emb = self.embedding_layer(torch.tensor([context])) # (1,block_size,d)
+                h = self.hidden_layer(embedding=emb)
+                logits = self.softmax_layer(h)
+                probs = F.softmax(logits, dim=1)
+                ix = torch.multinomial(probs, num_samples=1, generator=self.generator).item()
+                context = context[1:] + [ix]
+                out.append(ix)
+                if ix == 0:
+                    break
+            
+            print(''.join(self.tokenizer.itos[i] for i in out))
 
     def learning_rate_decay(self, count, loss, prev_loss):
         # Apply learning rate decay if loss is not improving significantly
