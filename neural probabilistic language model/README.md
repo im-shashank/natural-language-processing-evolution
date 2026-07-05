@@ -35,6 +35,9 @@ The model is trained on text data from `resources/names.txt`. The training proce
 
 ## How to Run
 
+You can point to one of the .pt files which contain the weights and metadata for the model
+trained on my machine and save yourself some training time. You need to edit main.py(line 33). Or you can train the model on your machine!
+
 ```bash
 cd neural\ probabilistic\ language\ model/main
 python main.py
