@@ -1,35 +1,86 @@
 import torch
 import os
 
-#TODO: Needs correct implementation
-class WeightManager:
+
+class ModelWeightManager:
     """
-    A class to manage saving and loading weights for the Bigram Language Model.
+    Manages saving and loading all parameters for the Neural Probabilistic Language Model.
+    
+    Saves/loads the complete model state atomically as a single checkpoint file,
+    following PyTorch's state_dict convention. The checkpoint includes:
+      - All 5 parameter tensors (embedding_C, hidden_W, hidden_B, softmax_W, softmax_B)
+      - Training metadata (iteration, loss, learning_rate) for reproducibility
+    
+    Usage:
+        manager = ModelWeightManager(filepath="model_checkpoint.pt")
+        
+        # Save during training
+        manager.save(model, iteration=1000, loss=2.5, learning_rate=-0.09)
+        
+        # Load before testing
+        success = manager.load(model, device=torch.device("cpu"))
     """
-    def __init__(self, filepath="bigram_weights.pt"):
+
+    def __init__(self, filepath="model_checkpoint.pt"):
         self.filepath = filepath
 
-    def save_weights(self, model):
+    def save(self, model, iteration=None, training_loss=None, validation_loss=None, test_loss=None, learning_rate=None):
         """
-        Saves the neural network's weight matrix to a file.
+        Saves all model parameters and optional training metadata to a single file.
+        
+        Args:
+            model: The NeuralProbabilisticLanguageModel instance.
+            iteration: Current training iteration number (stored as metadata).
+            loss: Current loss value (stored as metadata).
+            learning_rate: Current learning rate (stored as metadata).
         """
-        # We save the underlying data of the weights tensor
-        torch.save(model.parameters.data, self.filepath)
-        print(f"Weights successfully saved to '{self.filepath}'.")
+        checkpoint = {
+            # All 5 parameter tensors
+            "embedding_C": model.embedding_layer.C.data,
+            "hidden_W": model.hidden_layer.W.data,
+            "hidden_B": model.hidden_layer.B.data,
+            "softmax_W": model.softmax_layer.W.data,
+            "softmax_B": model.softmax_layer.B.data,
+            # Training metadata for reproducibility
+            "metadata": {
+                "iteration": iteration,
+                "training_loss": training_loss,
+                "validation_loss": validation_loss,
+                "test_loss": test_loss,
+                "learning_rate": learning_rate,
+            }
+        }
+        torch.save(checkpoint, self.filepath)
+        print(f"Model checkpoint saved to '{self.filepath}'.")
 
-    def load_weights(self, model, device):
+    def load(self, model, device):
         """
-        Loads the weights from a file and populates the model's weight matrix.
-        Returns True if successful, False if the file doesn't exist.
-        """
-        if os.path.exists(self.filepath):
-            # map_location ensures the weights load onto the correct hardware (CPU/MPS/CUDA)
-            loaded_weights = torch.load(self.filepath, map_location=device)
+        Loads all model parameters from a checkpoint file.
+        
+        Args:
+            model: The NeuralProbabilisticLanguageModel instance to populate.
+            device: The device to load tensors onto (cpu, cuda, mps).
             
-            # Update the underlying data of the neuron's weight matrix
-            model.parameters.data = loaded_weights
-            print(f"Weights successfully loaded from '{self.filepath}'.")
-            return True
-        else:
-            print(f"No saved weights found at '{self.filepath}'.")
-            return False
+        Returns:
+            dict: The metadata from the checkpoint (iteration, loss, learning_rate),
+                  or None if loading failed.
+        """
+        if not os.path.exists(self.filepath):
+            print(f"No checkpoint found at '{self.filepath}'.")
+            return None
+
+        checkpoint = torch.load(self.filepath, map_location=device, weights_only=True)
+
+        # Restore each parameter tensor
+        model.embedding_layer.C.data = checkpoint["embedding_C"]
+        model.hidden_layer.W.data = checkpoint["hidden_W"]
+        model.hidden_layer.B.data = checkpoint["hidden_B"]
+        model.softmax_layer.W.data = checkpoint["softmax_W"]
+        model.softmax_layer.B.data = checkpoint["softmax_B"]
+
+        metadata = checkpoint.get("metadata", {})
+        print(f"\nModel checkpoint loaded from:\n'{self.filepath}'\n")
+        if metadata:
+            print(f"\nCheckpoint info:\niteration={metadata.get('iteration')}\n"
+                  f"training loss={metadata.get('training_loss')}\nvalidation loss={metadata.get('validation_loss')}\ntest loss={metadata.get('test_loss')}\nlearning rate={-metadata.get('learning_rate')}\n")
+        return metadata

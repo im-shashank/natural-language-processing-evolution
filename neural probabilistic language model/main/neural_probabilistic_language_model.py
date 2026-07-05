@@ -12,8 +12,22 @@ device = torch.device("cuda" if torch.cuda.is_available()
                          else "cpu")
 
 class NeuralProbabilisticLanguageModel:
+    """
+    A Neural Probabilistic Language Model implementation using PyTorch.
+
+    This model predicts the next word in a sequence based on a fixed-length context 
+    of previous words, utilizing an embedding layer, a hidden layer, and a softmax layer.
+    """
+
     def __init__(self):
-        self.words = open('bi-gram language model/resources/names.txt', 'r').read().splitlines()
+        """
+        Initializes the NeuralProbabilisticLanguageModel with hyperparameters and layers.
+
+        Sets up the tokenizer, dataset creation, and the three main architectural components:
+        EmbeddingLayer, HiddenLayer, and SoftmaxLayer.
+        """
+
+        self.words = open('neural probabilistic language model/resources/names.txt', 'r').read().splitlines()
         self.tokenizer = Tokenizer(self.words)
 
         ###########################################################################
@@ -34,6 +48,7 @@ class NeuralProbabilisticLanguageModel:
         self.learning_rate_decay_check_interval = 10000
         self.learning_rate_decay_check_interval_decrementer = 100
         self.number_of_words_to_sample_from_model = 20
+        self.l2_lambda = 1e-4  # L2 regularization strength (weight decay coefficient)
 
         ###########################################################################
         ###########################################################################
@@ -70,8 +85,27 @@ class NeuralProbabilisticLanguageModel:
                            self.hidden_layer.B, 
                            self.softmax_layer.W, 
                            self.softmax_layer.B]
+        
+        ########################################
+        ############ model metadata ############
+        ########################################
+        self.training_loss = None
+        self.validation_loss = None
+        self.test_loss = None
+        ########################################
+        ########################################
+        ########################################
 
     def __call__(self, train_model=False, validate_model=False, test_model=False):
+        """
+        Executes the model's primary workflow (training, validation, and testing).
+
+        Args:
+            train_model (bool): Whether to train the model on the training set.
+            validate_model (bool): Whether to evaluate the model on the validation set.
+            test_model (bool): Whether to evaluate the model on the test set.
+        """
+
         random.seed(42)
         random.shuffle(self.words)
         n1 = int(0.8*len(self.words))
@@ -87,17 +121,25 @@ class NeuralProbabilisticLanguageModel:
             print("************* training end ***************\n")
         if validate_model:
             print("************* validating model *************\n")
-            loss = self.test_model(X=Xdev, Y=Ydev)
-            print(f"loss on validation datset is: {loss}\n")
+            self.validation_loss = self.test_model(X=Xdev, Y=Ydev)
+            print(f"loss on validation datset is: {self.validation_loss}\n")
         if test_model:
             print("************* test start *************\n")
-            loss = self.test_model(X=Xte, Y=Yte)
-            print(f"loss on test dataset is: {loss}\n")
-        
-        print("output sampled from model is:")
-        self.sample_from_model()
+            self.test_loss = self.test_model(X=Xte, Y=Yte)
+            print(f"loss on test dataset is: {self.test_loss}\n")
 
     def test_model(self, X, Y):
+        """
+        Evaluates the model's performance on a given dataset.
+
+        Args:
+            X (torch.Tensor): Input context indices.
+            Y (torch.Tensor): Target word indices.
+
+        Returns:
+            torch.Tensor: The calculated loss for the provided data.
+        """
+
         #Forward pass
         embedding = self.embedding_layer(X)
         hidden_layer_output = self.hidden_layer(embedding=embedding)
@@ -107,6 +149,17 @@ class NeuralProbabilisticLanguageModel:
         return loss
 
     def train_model(self, X, Y):
+        """
+        Trains the model using stochastic gradient descent.
+
+        Iteratively samples batches from the training data, performs forward and backward passes,
+        and updates weights. Includes logic for learning rate decay and early stopping.
+
+        Args:
+            X (torch.Tensor): Training input context indices.
+            Y (torch.Tensor): Training target word indices.
+        """
+
         count = 1
         prev_loss = 100.0
         while count <= self.learning_iteration:
@@ -129,6 +182,7 @@ class NeuralProbabilisticLanguageModel:
             # break early if acceptable loss is reached
             if loss <= self.acceptable_loss:
                 print(f"reached acceptable model loss.\ncurrent loss is: {loss}")
+                self.training_loss = loss
                 break
             
             #Backwards pass
@@ -143,12 +197,36 @@ class NeuralProbabilisticLanguageModel:
             
             prev_loss = loss
             count += 1
+            self.training_loss = loss
 
     def calculate_loss(self, logits, Y):
-        loss = F.cross_entropy(logits, Y)
-        return loss        
+        """
+        Computes the cross-entropy loss between model predictions and targets,
+        with optional L2 regularization (weight decay).
+
+        Args:
+            logits (torch.Tensor): The raw output from the softmax layer.
+            Y (torch.Tensor): The ground truth target indices.
+
+        Returns:
+            torch.Tensor: The computed cross-entropy loss + L2 regularization term.
+        """
+        # Standard cross-entropy loss
+        ce_loss = F.cross_entropy(logits, Y)
+        
+        # L2 regularization term: sum of squared weights across all parameters
+        l2_norm = sum(p.pow(2).sum() for p in self.parameters)
+        l2_penalty = (self.l2_lambda / 2) * l2_norm
+        
+        return ce_loss + l2_penalty        
     
     def sample_from_model(self):
+        """
+        Generates and prints random word sequences sampled from the trained model.
+
+        Starts with an empty context and iteratively predicts the next word until 
+        an end-of-sequence token (0) is reached or a maximum length is hit.
+        """
         for _ in range(self.number_of_words_to_sample_from_model):
             out = []
             context = [0] * self.context_length # initialize with all ...
@@ -166,6 +244,18 @@ class NeuralProbabilisticLanguageModel:
             print(''.join(self.tokenizer.itos[i] for i in out))
 
     def learning_rate_decay(self, count, loss, prev_loss):
+        """
+        Adjusts the learning rate based on the improvement of the loss.
+
+        If the loss improvement is below a certain threshold, the learning rate is decreased.
+        Conversely, if the loss increases or improves very little, it may be adjusted 
+        to escape local minima or stabilize training.
+
+        Args:
+            count (int): Current iteration number.
+            loss (float): Current batch loss.
+            prev_loss (float): Loss from the previous check interval.
+        """
         # Apply learning rate decay if loss is not improving significantly
         if count > 1000:  # Only start decay after some iterations
             loss_improvement = (prev_loss - loss) / prev_loss if prev_loss != 0 else 0

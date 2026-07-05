@@ -22,6 +22,7 @@ The model takes sequences of characters as input and predicts the probability di
 - `neural_probabilistic_language_model.py` - Core model implementation
 - `softmax_layer.py` - Implementation of the softmax output layer
 - `tokenizer.py` - Text preprocessing and tokenization utilities
+- `create_dataset.py` - Used to create dataset for training, validation, test.
 - `weight_manager.py` - Weight management and saving/loading functionality
 
 ## Training Process
@@ -29,8 +30,8 @@ The model takes sequences of characters as input and predicts the probability di
 The model is trained on text data from `resources/names.txt`. The training process:
 1. Reads and preprocesses the input text
 2. Converts characters to indices
-3. Trains the neural network for a specified number of iterations (TODO)
-4. Saves the trained weights to a file (TODO)
+3. Trains the neural network for a specified number of iterations
+4. Saves the trained weights to a file
 
 ## How to Run
 
