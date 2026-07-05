@@ -46,10 +46,9 @@ class EmbeddingLayer:
         self.tokenizer = Tokenizer(self.words) if tokenizer == None else tokenizer
         self.feature_dimension = feature_dimension
         self.vocabulary_size = len(self.tokenizer.stoi)
-        self.C = torch.randn((self.vocabulary_size, self.feature_dimension), 
-                             requires_grad=True, 
+        self.C = (torch.randn((self.vocabulary_size, self.feature_dimension), 
                              device=self.device,
-                             generator=self.generator)
+                             generator=self.generator) * 0.01).requires_grad_(True)
     
     def __call__(self, X):
         """

@@ -55,41 +55,34 @@ pip install torch
 After training, the model will generate text samples based on the learned patterns. The quality of generated text improves with more training iterations.
 
 ```text
-urrent iteration is: 398000 | current loss is: 1.9109547138214111 | current learning rate is: 0.10040100200350562
-current iteration is: 399000 | current loss is: 1.8926738500595093 | current learning rate is: 0.10040100200350562
-current iteration is: 400000 | current loss is: 1.9028453826904297 | current learning rate is: 0.10040100200350562
-************* training end ***************
+Checkpoint info:
+iteration=300000
+training loss=1.8541004657745361
+validation loss=2.0998966693878174
+test loss=2.096820116043091
+learning rate=0.019901563064352326
 
-************* validating model *************
-
-loss on validation datset is: 2.1321094036102295
-
-************* test start *************
-
-loss on test dataset is: 2.1387717723846436
-
-Model checkpoint saved to 'neural probabilistic language model/neural_probabilistic_language_model_weights.pt'.
 output sampled from model is:
-jayree.
-charlielom.
-mindci.
-cora.
-yoanna.
-pevza.
-adelin.
-ilma.
-kas.
-elliana.
-deeson.
-philo.
-rehan.
-darion.
-haydon.
-yeren.
-yochnith.
-cheyr.
+jayslynn.
+anniel.
+jami.
+dala.
+gracy.
+adrieln.
+zayli.
+johnia.
+khari.
+ellia.
+raseesobiah.
+sodria.
+yorar.
+khyla.
+donaya.
+matyn.
+yndal.
+chwyn.
 madyn.
-dreylyn.
+drenlyn.
 ```
 
 ## License

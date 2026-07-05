@@ -37,14 +37,14 @@ class NeuralProbabilisticLanguageModel:
         # below three variables are used to control the number of paramters
         # tweek these parameters to increase the number of parameters
         self.context_length = 5
-        self.num_of_neuron_for_hidden_layer = 300
+        self.num_of_neuron_for_hidden_layer = 250
         self.feature_dimension = 12
 
         # parameters to control the model's training
         self.learning_iteration = 400000
-        self.acceptable_loss = 1.8
+        self.acceptable_loss = 1.0
         self.learning_rate = -0.1
-        self.training_batch_size = 10000
+        self.training_batch_size = 1000
         self.learning_rate_decay_check_interval = 10000
         self.learning_rate_decay_check_interval_decrementer = 100
         self.number_of_words_to_sample_from_model = 20
@@ -177,7 +177,7 @@ class NeuralProbabilisticLanguageModel:
             
             #Check if we want learning rate decay
             if count % self.learning_rate_decay_check_interval == 0:
-                self.learning_rate_decay(count=count, prev_loss=prev_loss, loss=loss)
+                self.learning_rate_decay(count=count, prev_loss=prev_loss, loss=loss.item())
 
             # break early if acceptable loss is reached
             if loss <= self.acceptable_loss:
@@ -187,17 +187,19 @@ class NeuralProbabilisticLanguageModel:
             
             #Backwards pass
             for p in self.parameters:
-                p.grad = None
+                if p.grad is not None:
+                    p.grad.zero_()
             
             loss.backward()
 
             #Update weights with learning rate decay based on loss improvement
             for p in self.parameters:
-                p.data += self.learning_rate * p.grad
+                if p.grad is not None: # Safety check
+                    p.data += self.learning_rate * p.grad
             
-            prev_loss = loss
+            prev_loss = loss.item()
             count += 1
-            self.training_loss = loss
+            self.training_loss = loss.item()
 
     def calculate_loss(self, logits, Y):
         """
@@ -257,13 +259,13 @@ class NeuralProbabilisticLanguageModel:
             prev_loss (float): Loss from the previous check interval.
         """
         # Apply learning rate decay if loss is not improving significantly
-        if count > 1000:  # Only start decay after some iterations
+        if count > 5000:  # Only start decay after some iterations
             loss_improvement = (prev_loss - loss) / prev_loss if prev_loss != 0 else 0
-            if loss_improvement < 0.001:  # If improvement is less than 0.1%
-                self.learning_rate *= 0.999  # Reduce learning rate by 5%
+            if loss_improvement < 0.01:  # If improvement is less than 0.1%
+                self.learning_rate *= 0.95  # Reduce learning rate
                 if self.learning_rate_decay_check_interval > 5000:
                     self.learning_rate_decay_check_interval -= self.learning_rate_decay_check_interval_decrementer
-            if loss_improvement > 0.001: # If loss increases instead of decreasing
-                self.learning_rate /= 0.999 # Increase learning rate by 5%
+            if loss_improvement > 0.01: # If loss increases instead of decreasing
+                self.learning_rate /= 0.999 # Increase learning rate
                 if self.learning_rate_decay_check_interval > 5000:
                     self.learning_rate_decay_check_interval -= self.learning_rate_decay_check_interval_decrementer

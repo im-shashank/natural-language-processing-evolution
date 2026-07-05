@@ -49,14 +49,12 @@ class SoftmaxLayer:
         self.tokenizer = Tokenizer(open('bi-gram language model/resources/names.txt', 'r').read().splitlines()) if tokenizer == None else tokenizer
         self.vocabulary_size = len(self.tokenizer.stoi)
         self.num_neron = num_neuron
-        self.W = torch.randn((self.num_neron, self.vocabulary_size), 
-                             requires_grad=True, 
+        self.W = (torch.randn((self.num_neron, self.vocabulary_size),  
                              device=self.device, 
-                             generator=self.generator)
-        self.B = torch.randn(self.vocabulary_size, 
-                             requires_grad=True, 
+                             generator=self.generator) * 0.01).requires_grad_(True)
+        self.B = (torch.randn(self.vocabulary_size, 
                              device=self.device, 
-                             generator=self.generator)
+                             generator=self.generator) * 0.01).requires_grad_(True)
     
     def __call__(self, hidden_layer):
         """

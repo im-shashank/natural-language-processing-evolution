@@ -40,13 +40,14 @@ class HiddenLayer:
         self.generator = torch.Generator(device=self.device).manual_seed(2147483647) if generator == None else generator
         self.context_length = context_lenght
         self.feature_dimension = feature_dimension
-        self.W = torch.randn(((self.context_length * self.feature_dimension), num_neuron), 
-                             requires_grad=True, 
+        self.tanh_gain = (5/3) # this is the standard gain for a tanh non-linearity
+        self.kaiming_init = ( self.tanh_gain / (((self.context_length * self.feature_dimension)) ** 0.5))
+        self.W = (torch.randn(((self.context_length * self.feature_dimension), num_neuron), 
                              device=self.device, 
-                             generator=self.generator)
-        self.B = torch.randn(num_neuron, requires_grad=True, 
+                             generator=self.generator) * self.kaiming_init).requires_grad_(True)
+        self.B = (torch.randn(num_neuron, 
                              device=self.device, 
-                             generator=self.generator)
+                             generator=self.generator) * 0.01).requires_grad_(True)
     
     def __call__(self, embedding):
         """
