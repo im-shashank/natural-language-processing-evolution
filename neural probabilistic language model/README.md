@@ -1,6 +1,6 @@
 # Neural Probabilistic Language Model
 
-This is an implementation of a neural probabilistic language model using PyTorch. The model predicts the next character in a sequence based on the previous characters, using a neural network approach.
+This is an implementation of a neural probabilistic language model (Yoshua Bengio 2003 paper) using PyTorch. The model predicts the next character in a sequence based on the previous characters, using a neural network approach.
 
 ## Model Architecture
 
