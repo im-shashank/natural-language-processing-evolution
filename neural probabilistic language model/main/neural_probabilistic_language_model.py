@@ -4,6 +4,7 @@ from embedding_layer import *
 from hidden_layer import *
 from softmax_layer import *
 from create_dataset import *
+from batch_normalization import *
 import random
 
 # Check if MPS (Metal Performance Shaders) is available for Apple Silicon
@@ -42,9 +43,9 @@ class NeuralProbabilisticLanguageModel:
 
         # parameters to control the model's training
         self.learning_iteration = 400000
-        self.acceptable_loss = 1.0
+        self.acceptable_loss = 1.6
         self.learning_rate = -0.1
-        self.training_batch_size = 1000
+        self.training_batch_size = 32
         self.learning_rate_decay_check_interval = 10000
         self.learning_rate_decay_check_interval_decrementer = 100
         self.number_of_words_to_sample_from_model = 20
@@ -79,12 +80,17 @@ class NeuralProbabilisticLanguageModel:
                                           tokenizer=self.tokenizer,
                                           num_neuron=self.num_of_neuron_for_hidden_layer,
                                           generator=self.generator)
+        
+        self.batch_normalization = BatchNormalization(device=device,
+                                                      num_neuron=self.num_of_neuron_for_hidden_layer)
 
         self.parameters = [self.embedding_layer.C, 
                            self.hidden_layer.W, 
-                           self.hidden_layer.B, 
+                        #    self.hidden_layer.B, 
                            self.softmax_layer.W, 
-                           self.softmax_layer.B]
+                           self.softmax_layer.B,
+                           self.batch_normalization.batch_normalization_bias,
+                           self.batch_normalization.batch_normalization_gain]
         
         ########################################
         ############ model metadata ############
@@ -142,7 +148,9 @@ class NeuralProbabilisticLanguageModel:
 
         #Forward pass
         embedding = self.embedding_layer(X)
-        hidden_layer_output = self.hidden_layer(embedding=embedding)
+        embedding_concate = self.hidden_layer.concate_embedding(embedding=embedding)
+        embedding_concate = self.batch_normalization(embedding_concate=embedding_concate, training=False)
+        hidden_layer_output = self.hidden_layer(embedding_concate=embedding_concate)
         logits = self.softmax_layer(hidden_layer=hidden_layer_output)
         loss = self.calculate_loss(logits=logits, 
                                     Y=Y)
@@ -166,9 +174,19 @@ class NeuralProbabilisticLanguageModel:
             ix = torch.randint(0, X.shape[0], (self.training_batch_size,))
 
             #Forward pass
+            #-------embbed------------#
             embedding = self.embedding_layer(X[ix])
-            hidden_layer_output = self.hidden_layer(embedding=embedding)
+            #-------------------------#
+            #------Hidden layer-------#
+            embedding_concate = self.hidden_layer.concate_embedding(embedding=embedding)
+                #-------batch normalization-------#
+            embedding_concate = self.batch_normalization(embedding_concate=embedding_concate, training=True)
+                #---------------------------------#
+            hidden_layer_output = self.hidden_layer(embedding_concate=embedding_concate)
+            #-------------------------#
+            #-------Softmax-----------#
             logits = self.softmax_layer(hidden_layer=hidden_layer_output)
+            #-------------------------#
             loss = self.calculate_loss(logits=logits, 
                                     Y=Y[ix])
             
@@ -234,7 +252,9 @@ class NeuralProbabilisticLanguageModel:
             context = [0] * self.context_length # initialize with all ...
             while True:
                 emb = self.embedding_layer(torch.tensor([context])) # (1,block_size,d)
-                h = self.hidden_layer(embedding=emb)
+                emb_concat = self.hidden_layer.concate_embedding(embedding=emb)
+                emb_concat_normalized = self.batch_normalization(embedding_concate=emb_concat, training=False)
+                h = self.hidden_layer(embedding_concate=emb_concat_normalized)
                 logits = self.softmax_layer(h)
                 probs = F.softmax(logits, dim=1)
                 ix = torch.multinomial(probs, num_samples=1, generator=self.generator).item()

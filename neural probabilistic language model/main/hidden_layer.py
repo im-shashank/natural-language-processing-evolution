@@ -45,11 +45,13 @@ class HiddenLayer:
         self.W = (torch.randn(((self.context_length * self.feature_dimension), num_neuron), 
                              device=self.device, 
                              generator=self.generator) * self.kaiming_init).requires_grad_(True)
-        self.B = (torch.randn(num_neuron, 
-                             device=self.device, 
-                             generator=self.generator) * 0.01).requires_grad_(True)
+        # hidden layer bias becomes redundant because batch normalization adds it's own bias
+        # which makes the gradient of hidden layer bias always zero
+        # self.B = (torch.randn(num_neuron, 
+        #                      device=self.device, 
+        #                      generator=self.generator) * 0.01).requires_grad_(True)
     
-    def __call__(self, embedding):
+    def __call__(self, embedding_concate):
         """
         Performs a forward pass through the hidden layer.
 
@@ -64,5 +66,9 @@ class HiddenLayer:
             torch.Tensor: Activated hidden representation of shape (batch_size, num_neuron),
                 where values are in the range [-1, 1] due to tanh activation.
         """
-        output = torch.tanh(embedding.view(-1, (self.context_length * self.feature_dimension)) @ self.W + self.B)
+        output = torch.tanh(embedding_concate)
         return output
+    
+    def concate_embedding(self, embedding):
+        embedding_concate = embedding.view(-1, (self.context_length * self.feature_dimension)) @ self.W #+ self.B
+        return embedding_concate

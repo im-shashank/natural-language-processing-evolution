@@ -38,7 +38,9 @@ class ModelWeightManager:
             # All 5 parameter tensors
             "embedding_C": model.embedding_layer.C.data,
             "hidden_W": model.hidden_layer.W.data,
-            "hidden_B": model.hidden_layer.B.data,
+            # "hidden_B": model.hidden_layer.B.data,
+            "batch_normalization_gain": model.batch_normalization.batch_normalization_gain,
+            "batch_normalization_bias": model.batch_normalization.batch_normalization_bias,
             "softmax_W": model.softmax_layer.W.data,
             "softmax_B": model.softmax_layer.B.data,
             # Training metadata for reproducibility
@@ -74,7 +76,9 @@ class ModelWeightManager:
         # Restore each parameter tensor
         model.embedding_layer.C.data = checkpoint["embedding_C"]
         model.hidden_layer.W.data = checkpoint["hidden_W"]
-        model.hidden_layer.B.data = checkpoint["hidden_B"]
+        # model.hidden_layer.B.data = checkpoint["hidden_B"]
+        model.batch_normalization.batch_normalization_gain = checkpoint["batch_normalization_gain"]
+        model.batch_normalization.batch_normalization_bias = checkpoint["batch_normalization_bias"]
         model.softmax_layer.W.data = checkpoint["softmax_W"]
         model.softmax_layer.B.data = checkpoint["softmax_B"]
 
