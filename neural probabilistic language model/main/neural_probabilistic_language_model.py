@@ -45,7 +45,7 @@ class NeuralProbabilisticLanguageModel:
         self.learning_iteration = 400000
         self.acceptable_loss = 1.6
         self.learning_rate = -0.1
-        self.training_batch_size = 32
+        self.training_batch_size = 128
         self.learning_rate_decay_check_interval = 10000
         self.learning_rate_decay_check_interval_decrementer = 100
         self.number_of_words_to_sample_from_model = 20

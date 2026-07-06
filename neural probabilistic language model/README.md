@@ -60,34 +60,44 @@ pip install torch
 After training, the model will generate text samples based on the learned patterns. The quality of generated text improves with more training iterations.
 
 ```text
-Checkpoint info:
-iteration=300000
-training loss=1.8541004657745361
-validation loss=2.0998966693878174
-test loss=2.096820116043091
-learning rate=0.019901563064352326
+current iteration is: 41000 | current loss is: 2.0543532371520996 | current learning rate is: 0.095285570951427
+current iteration is: 42000 | current loss is: 2.055337905883789 | current learning rate is: 0.095285570951427
+current iteration is: 43000 | current loss is: 2.0286004543304443 | current learning rate is: 0.095285570951427
+current iteration is: 44000 | current loss is: 2.068676233291626 | current learning rate is: 0.095285570951427
+reached acceptable model loss.
+current loss is: 1.5554978847503662
+************* training end ***************
 
+************* validating model *************
+
+loss on validation datset is: 2.1194019317626953
+
+************* test start *************
+
+loss on test dataset is: 2.1166341304779053
+
+Model checkpoint saved to 'neural probabilistic language model/neural_probabilistic_language_model_weights.pt'.
 output sampled from model is:
-jayslynn.
-anniel.
-jami.
-dala.
-gracy.
-adrieln.
-zayli.
-johnia.
-khari.
-ellia.
-raseesobiah.
-sodria.
-yorar.
-khyla.
-donaya.
-matyn.
-yndal.
-chwyn.
-madyn.
-drenlyn.
+sanvis.
+iliana.
+paizli.
+danor.
+gelaseen.
+darla.
+nahla.
+kambeol.
+shonon.
+emoah.
+hayeyt.
+tasha.
+yashana.
+canley.
+samairi.
+alya.
+royalner.
+larron.
+shvir.
+kamary.
 ```
 
 ## License
