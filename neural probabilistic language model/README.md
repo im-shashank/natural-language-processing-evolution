@@ -60,44 +60,41 @@ pip install torch
 After training, the model will generate text samples based on the learned patterns. The quality of generated text improves with more training iterations.
 
 ```text
-current iteration is: 41000 | current loss is: 2.0543532371520996 | current learning rate is: 0.095285570951427
-current iteration is: 42000 | current loss is: 2.055337905883789 | current learning rate is: 0.095285570951427
-current iteration is: 43000 | current loss is: 2.0286004543304443 | current learning rate is: 0.095285570951427
-current iteration is: 44000 | current loss is: 2.068676233291626 | current learning rate is: 0.095285570951427
+current iteration is: 272000 | current loss is: 2.019129753112793 | current learning rate is: 0.030058504433046817
 reached acceptable model loss.
-current loss is: 1.5554978847503662
+current loss is: 1.473484754562378
 ************* training end ***************
 
 ************* validating model *************
 
-loss on validation datset is: 2.1194019317626953
+loss on validation datset is: 2.090217351913452
 
 ************* test start *************
 
-loss on test dataset is: 2.1166341304779053
+loss on test dataset is: 2.090543031692505
 
 Model checkpoint saved to 'neural probabilistic language model/neural_probabilistic_language_model_weights.pt'.
 output sampled from model is:
-sanvis.
-iliana.
-paizli.
-danor.
-gelaseen.
-darla.
-nahla.
-kambeol.
-shonon.
-emoah.
-hayeyt.
-tasha.
-yashana.
-canley.
-samairi.
-alya.
-royalner.
-larron.
-shvir.
+sanvy.
+nilani.
+spranis.
+danody.
+elaonell.
+triah.
+aman.
+kamberlee.
+daylynne.
+sitabeth.
+jashon.
+aalana.
+sante.
+samericie.
+eriaro.
+absella.
+rehan.
+hviv.
 kamary.
+macolen.
 ```
 
 ## License

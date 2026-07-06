@@ -43,7 +43,7 @@ class NeuralProbabilisticLanguageModel:
 
         # parameters to control the model's training
         self.learning_iteration = 400000
-        self.acceptable_loss = 1.6
+        self.acceptable_loss = 1.5
         self.learning_rate = -0.1
         self.training_batch_size = 128
         self.learning_rate_decay_check_interval = 10000
