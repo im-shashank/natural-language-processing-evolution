@@ -49,6 +49,7 @@ The neural probabilistic language model uses a neural network approach to predic
 - Dynamically adjusting learning rate depending upon if the loss increases or decreases.
 - L2 Regularization (Weight Decay) during loss calculation
 - Kaiming initialization of the hidden tanh layer.
+- Batch normalization
 - Weight manager class that saves and loads(once model is trained) the models weights.
 
 ### How to Run:

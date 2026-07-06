@@ -7,8 +7,9 @@ This is an implementation of a neural probabilistic language model (Yoshua Bengi
 The neural probabilistic language model consists of three main components:
 
 1. **Embedding Layer**: Converts characters into dense vector representations
-2. **Hidden Layer**: Processes the embedded vectors through a tanh activation function
-3. **Softmax Layer**: Outputs a probability distribution over the vocabulary
+2. **Batch Normalization Layer**: Applies batch normalization to embeded batches.
+3. **Hidden Layer**: Processes the embedded vectors through a tanh activation function
+4. **Softmax Layer**: Outputs a probability distribution over the vocabulary
 
 ## How It Works
 
@@ -18,6 +19,7 @@ The model takes sequences of characters as input and predicts the probability di
 
 - `main.py` - Main script to run the model
 - `embedding_layer.py` - Implementation of the embedding layer
+- `batch_normalization.py` - Implementation of batch normalization layer
 - `hidden_layer.py` - Implementation of the hidden layer
 - `neural_probabilistic_language_model.py` - Core model implementation
 - `softmax_layer.py` - Implementation of the softmax output layer
