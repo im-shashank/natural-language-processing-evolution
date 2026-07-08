@@ -58,6 +58,7 @@ pip install torch
 ## Loss Graph
 
 ![Loss Graph](loss_graph.png)
+<img src="loss_graph.png" alt="Alt text here" width="300" />
 
 ## Sample Output
 
