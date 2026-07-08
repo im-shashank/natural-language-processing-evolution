@@ -57,7 +57,7 @@ pip install torch
 
 ## Loss Graph
 
-![Loss Graph](./loss_graph.png)
+![Loss Graph](./loss_graph.jpg)
 
 ## Sample Output
 
