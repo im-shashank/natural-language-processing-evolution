@@ -57,7 +57,8 @@ pip install torch
 
 ## Loss Graph
 
-The y-axis is the log10 of the loss value
+The y-axis is the log10 of the loss value.
+
 The x-axis is the number of iterations performed (scale is 1 unit = 1000 iterations)
 ![Loss Graph](loss_graph.jpg)
 
