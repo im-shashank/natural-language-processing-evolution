@@ -55,6 +55,10 @@ Install dependencies:
 pip install torch
 ```
 
+## Loss Graph
+
+![Loss Graph](loss_graph.png)
+
 ## Sample Output
 
 After training, the model will generate text samples based on the learned patterns. The quality of generated text improves with more training iterations.

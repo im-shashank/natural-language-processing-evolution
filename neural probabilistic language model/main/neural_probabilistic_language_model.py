@@ -6,6 +6,7 @@ from softmax_layer import *
 from create_dataset import *
 from batch_normalization import *
 import random
+from plotting import *
 
 # Check if MPS (Metal Performance Shaders) is available for Apple Silicon
 device = torch.device("cuda" if torch.cuda.is_available()
@@ -45,11 +46,12 @@ class NeuralProbabilisticLanguageModel:
         self.learning_iteration = 400000
         self.acceptable_loss = 1.5
         self.learning_rate = -0.1
-        self.training_batch_size = 128
+        self.training_batch_size = 1024
         self.learning_rate_decay_check_interval = 10000
         self.learning_rate_decay_check_interval_decrementer = 100
         self.number_of_words_to_sample_from_model = 20
         self.l2_lambda = 1e-4  # L2 regularization strength (weight decay coefficient)
+        self.plot_loss_graph = True
 
         ###########################################################################
         ###########################################################################
@@ -83,6 +85,8 @@ class NeuralProbabilisticLanguageModel:
         
         self.batch_normalization = BatchNormalization(device=device,
                                                       num_neuron=self.num_of_neuron_for_hidden_layer)
+        
+        self.plotting = Plotting()
 
         self.parameters = [self.embedding_layer.C, 
                            self.hidden_layer.W, 
@@ -124,6 +128,8 @@ class NeuralProbabilisticLanguageModel:
         if train_model:
             print("************* training start *************\n")
             self.train_model(X=Xtr, Y=Ytr)
+            if self.plot_loss_graph:
+                self.plotting.plot()
             print("************* training end ***************\n")
         if validate_model:
             print("************* validating model *************\n")
@@ -218,6 +224,7 @@ class NeuralProbabilisticLanguageModel:
             prev_loss = loss.item()
             count += 1
             self.training_loss = loss.item()
+            self.plotting.track(loss=loss)
 
     def calculate_loss(self, logits, Y):
         """
