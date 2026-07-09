@@ -1,9 +1,10 @@
 # Simple Language Models
 
-This repository contains implementations of two classic language models in Python using PyTorch:
+This repository contains implementations of three classic language models in Python using PyTorch:
 
 1. **Bigram Language Model** - A simple n-gram model that predicts the next character based on the previous character
 2. **Neural Probabilistic Language Model** - A more sophisticated neural network-based approach to language modeling
+3. **WaveNet Language Model** - A state-of-the-art convolutional neural network for sequence modeling
 
 ## Project Structure
 
@@ -17,7 +18,11 @@ This repository contains implementations of two classic language models in Pytho
 │   ├── main/                    # Main implementation files
 │   ├── resources/               # Training data
 │   └── README.md                # Neural probabilistic model documentation
-└── README.md                    # This file
+└── wave-net language model/
+    ├── main/                    # Main implementation files
+    ├── resources/               # Training data
+    ├── Figure_1.png             # Training loss graph
+    └── README.md                # WaveNet model documentation
 ```
 
 ## Bigram Language Model
@@ -48,6 +53,24 @@ The neural probabilistic language model uses a neural network approach to predic
 - Training from text data
 - Dynamically adjusting learning rate depending upon if the loss increases or decreases.
 - L2 Regularization (Weight Decay) during loss calculation
+
+## WaveNet Language Model
+
+The WaveNet language model implements a state-of-the-art convolutional neural network architecture for sequence modeling. It uses dilated convolutions and residual connections to efficiently capture long-range dependencies in text data.
+
+### Features:
+- Character-level language modeling
+- Dilated convolutional layers for efficient sequence processing
+- Batch normalization and dropout for stable training
+- Residual connections for better gradient flow
+- Training from text data with dynamic learning rate scheduling
+- Loss visualization capabilities
+
+### How to Run:
+```bash
+cd wave-net\ language\ model/main
+python main.py
+```
 - Kaiming initialization of the hidden tanh layer.
 - Batch normalization
 - Weight manager class that saves and loads(once model is trained) the models weights.
