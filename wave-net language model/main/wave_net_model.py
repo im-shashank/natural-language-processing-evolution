@@ -7,6 +7,10 @@ from embedding import *
 from flatten_consecutive import *
 from batch_norm_1d import *
 from plotting import *
+from residual_block import *
+import csv
+import os
+from datetime import datetime
 
 # Check if MPS (Metal Performance Shaders) is available for Apple Silicon
 device = torch.device("cuda" if torch.cuda.is_available()
@@ -54,31 +58,36 @@ class WaveNetLanguageModel:
         ################# Tweak below parameters to min-max loss ##################
         ###########################################################################
 
-        self.context_length = 16
+        self.context_length = 8
         self.generator = torch.Generator(device=device).manual_seed(42)
-        self.feature_dimension = 24
-        self.training_batch_size = 128
+        self.feature_dimension = 12
+        self.training_batch_size = 1000
         self.casual_convolutional_dialation = 2
-        self.num_hidden_neuron = 128 
-        self.learning_iteration = 100000
+        self.num_hidden_neuron = 64 
+        self.learning_iteration = 210000
         self.acceptable_loss = 0.0
 
         self.acceptable_validation_loss = 2.00
 
-        self.l2_lambda = 1e-5  # L2 regularization strength (weight decay coefficient)
+        self.l2_lambda = 1e-4  # L2 regularization strength (weight decay coefficient)
 
-        self.drop_out_layer_regularization_factor = 0.3
+        self.drop_out_layer_regularization_factor = 0.1
 
         self.show_loss_plot = True
 
-        self.learning_rate_reduction_factor = 0.99 # this will be multiplied by the current learning rate upon learning rate plateau
-        self.learning_rate_reduction_check_interval = 5000 # after this many epochs learning rate reduction check will be performed.
-        self.minimum_learning_rate = 0.00001
-        self.learning_rate = 0.001
+        self.learning_rate_reduction_factor = 0.98 # this will be multiplied by the current learning rate upon learning rate plateau
+        self.learning_rate_reduction_check_interval = 500 # after this many epochs learning rate reduction check will be performed.
+        self.minimum_learning_rate = 0.001
+        self.learning_rate = 0.01
 
         ###########################################################################
         ###########################################################################
         ###########################################################################
+
+        self.reduce_lr_on_plateau ="reduce_lr_on_plateau"
+        self.cosine_annea_ling_lr = "cosine_annea_ling_lr"
+        self.one_cycle_lr = "one_cycle_lr"
+        self.cosine_annealing_warm_restarts = "cosine_annealing_warm_restarts"
 
         self.words = open('wave-net language model/resources/names.txt', 'r').read().splitlines()
         self.tokenizer = Tokenizer(self.words)
@@ -101,33 +110,29 @@ class WaveNetLanguageModel:
                       feature_dimension=self.feature_dimension,
                       device=device),
             
-            # Layer 1: Compresses sequence from 16 to 8
+            # Layer 1: Compresses sequence from 8 to 4
             FlattenConsecutive(self.casual_convolutional_dialation, device=device), 
             nn.Linear((self.casual_convolutional_dialation * self.feature_dimension), self.num_hidden_neuron, device=device, bias=False), 
             BatchNorm1d(self.num_hidden_neuron, device=device), 
-            nn.GELU(), 
-            nn.Dropout(p=self.drop_out_layer_regularization_factor),
+            nn.Tanh(), 
+            # nn.Dropout(p=self.drop_out_layer_regularization_factor),
+            ResidualBlock(self.num_hidden_neuron, self.drop_out_layer_regularization_factor, device=device),
 
-            # Layer 2: Compresses sequence from 8 to 4
+            # Layer 2: Compresses sequence from 4 to 2
             FlattenConsecutive(self.casual_convolutional_dialation, device=device), 
             nn.Linear((self.casual_convolutional_dialation * self.num_hidden_neuron), self.num_hidden_neuron, device=device, bias=False), 
             BatchNorm1d(self.num_hidden_neuron, device=device), 
-            nn.GELU(), 
-            nn.Dropout(p=self.drop_out_layer_regularization_factor),
+            nn.Tanh(), 
+            # nn.Dropout(p=self.drop_out_layer_regularization_factor),
+            ResidualBlock(self.num_hidden_neuron, self.drop_out_layer_regularization_factor, device=device),
 
-            # Layer 3: Compresses sequence from 4 to 2
+            # Layer 3: Compresses sequence from 2 to 1
             FlattenConsecutive(self.casual_convolutional_dialation, device=device), 
             nn.Linear((self.casual_convolutional_dialation * self.num_hidden_neuron), self.num_hidden_neuron, device=device, bias=False), 
             BatchNorm1d(self.num_hidden_neuron, device=device), 
-            nn.GELU(), 
-            nn.Dropout(p=self.drop_out_layer_regularization_factor),
-
-            # Layer 4: Compresses sequence from 2 to 1
-            FlattenConsecutive(self.casual_convolutional_dialation, device=device), 
-            nn.Linear((self.casual_convolutional_dialation * self.num_hidden_neuron), self.num_hidden_neuron, device=device, bias=False), 
-            BatchNorm1d(self.num_hidden_neuron, device=device), 
-            nn.GELU(), 
-            nn.Dropout(p=self.drop_out_layer_regularization_factor),
+            nn.Tanh(), 
+            # nn.Dropout(p=self.drop_out_layer_regularization_factor),
+            ResidualBlock(self.num_hidden_neuron, self.drop_out_layer_regularization_factor, device=device),
 
             # Output Layer
             nn.Linear(self.num_hidden_neuron, self.vocabulary_size, device=device)
@@ -160,18 +165,48 @@ class WaveNetLanguageModel:
             testing_dataset, testing_target_set = self.create_dataset(self.words[n2:])
 
         if train_model:
-            self.train_model(training_dataset=training_dataset, 
-                             training_target_set=training_target_set,
-                             validation_dataset=validation_dataset,
-                             validation_target_set=validation_target_set)
+            try:
+                self.train_model(training_dataset=training_dataset, 
+                                training_target_set=training_target_set,
+                                validation_dataset=validation_dataset,
+                                validation_target_set=validation_target_set)
+            except KeyboardInterrupt:
+                # If Ctrl+C is pressed, intercept it and print a message
+                print("\n\n[!] Training interrupted by user (Ctrl+C).")
+                print("--- Saving current progress, plotting, and exporting logs ---\n")
+
+                self.perform_validation_and_test(validation_dataset=validation_dataset, 
+                                         validation_target_set=validation_target_set, 
+                                         testing_dataset=testing_dataset, 
+                                         testing_target_set=testing_target_set, 
+                                         validate_model=validate_model,
+                                         test_model=test_model)
+                
+                self.export_run_to_csv(optimizer_name="SGD", scheduler_name="CosineAnnealingWarmRestarts")
+
+                if self.show_loss_plot:
+                    self.plotting.plot()
+                return
+
             if self.show_loss_plot:
                 self.plotting.plot()
+
+        self.perform_validation_and_test(validation_dataset=validation_dataset, 
+                                         validation_target_set=validation_target_set, 
+                                         testing_dataset=testing_dataset, 
+                                         testing_target_set=testing_target_set, 
+                                         validate_model=validate_model,
+                                         test_model=test_model)
+        
+        self.export_run_to_csv(optimizer_name="SGD", scheduler_name="CosineAnnealingWarmRestarts")
+        
+        print(f"training loss: {self.train_loss}\nvalidation loss: {self.validation_loss}\ntest loss: {self.test_loss}")
+
+    def perform_validation_and_test(self, validation_dataset, validation_target_set, testing_dataset ,testing_target_set, validate_model=True, test_model=True):
         if validate_model:
             self.validation_loss = self.forward_pass_model(input_dataset=validation_dataset, target_dataset=validation_target_set)
         if test_model:
             self.test_loss = self.forward_pass_model(input_dataset=testing_dataset, target_dataset=testing_target_set)
-        
-        print(f"training loss: {self.train_loss}\nvalidation loss: {self.validation_loss}\ntest loss: {self.test_loss}")
 
     @torch.no_grad()
     def forward_pass_model(self, input_dataset, target_dataset):
@@ -209,28 +244,10 @@ class WaveNetLanguageModel:
         """
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)
 
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, 
-            mode='min', 
-            factor=self.learning_rate_reduction_factor, 
-            patience=self.learning_rate_reduction_check_interval
-        )
-
-        cosine_Learning_rate_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer=optimizer,
-            T_max=self.learning_iteration,
-            eta_min=self.minimum_learning_rate
-        )
-
-        # OneCycleLR automatically handles the warmup and the cooldown
-        onecycle_scheduler = torch.optim.lr_scheduler.OneCycleLR(
-            optimizer=optimizer,
-            max_lr=self.learning_rate,          # Peaks at 0.001
-            total_steps=self.learning_iteration,# Total iterations (200,000)
-            pct_start=0.1,                      # Spends the first 10% (20,000 steps) warming up
-            div_factor=25.0,                    # Starts at max_lr / 25 (0.00004)
-            final_div_factor=1000.0             # Ends at starting_lr / 1000
-        )
+        scheduler = self.get_learning_rate_scheduler(optimizer=optimizer, type_of_scheduler=self.cosine_annealing_warm_restarts)
+        if scheduler == None:
+            print(f"the learning rate is not specified. aborting training")
+            return
 
         count = 1
         while count <= self.learning_iteration:
@@ -257,23 +274,26 @@ class WaveNetLanguageModel:
 
             # 7. Update the weights using the calculated gradients
             optimizer.step()
-
-            # 8. Tell the scheduler to check if the loss has plateaued
-            onecycle_scheduler.step()
             
             self.train_loss = loss.item()
             self.plotting.track_train(loss) # for tracking the loss and later drawing a plot
 
+            # 8. Check if learning rate needs reduction
+            scheduler.step()
+
             if count % self.learning_rate_reduction_check_interval == 0:
                 current_validation_loss = self.forward_pass_model(input_dataset=validation_dataset, target_dataset=validation_target_set)
+
                 self.plotting.track_val(current_validation_loss)
+
                 print(f"current loss: {self.train_loss} | iteration: {count}/{self.learning_iteration} | current learning rate: {optimizer.param_groups[0]['lr']} | current validation loss: {current_validation_loss}")
+
                 if current_validation_loss <= self.acceptable_validation_loss:
                     print(f"****************** reached acceptable validation loss ******************")
                     print(f"*********************** {current_validation_loss}***********************")
                     break
             
-            # 8. increment count to avoid infinite loop
+            # 9. increment count to avoid infinite loop
             count += 1
     
     def calculate_loss(self, logits, target_set):
@@ -290,10 +310,10 @@ class WaveNetLanguageModel:
         ce_loss = F.cross_entropy(input=logits, target=target_set)
 
         # L2 regularization term: sum of squared weights across all parameters
-        l2_norm = sum(p.pow(2).sum() for p in self.model.parameters(recurse=True))
-        l2_penalty = (self.l2_lambda / 2) * l2_norm
+        # l2_norm = sum(p.pow(2).sum() for p in self.model.parameters(recurse=True))
+        # l2_penalty = (self.l2_lambda / 2) * l2_norm
         
-        return ce_loss + l2_penalty        
+        return ce_loss #+ l2_penalty        
     
     def total_number_of_parameters(self):
         """
@@ -304,3 +324,79 @@ class WaveNetLanguageModel:
         """
         count = sum(p.nelement() for p in self.model.parameters(recurse=True))
         return count
+    
+    def get_learning_rate_scheduler(self, optimizer, type_of_scheduler="reduce_lr_on_plateau"):
+        if type_of_scheduler == self.reduce_lr_on_plateau:
+            return torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer, 
+                mode='min', 
+                factor=self.learning_rate_reduction_factor, 
+                patience=3,
+                min_lr=self.minimum_learning_rate,
+                threshold=0.001,
+                threshold_mode='abs'
+            )
+        elif type_of_scheduler == self.cosine_annea_ling_lr:
+            return torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer=optimizer,
+                T_max=self.learning_iteration,
+                eta_min=self.minimum_learning_rate
+            )
+        elif type_of_scheduler == self.one_cycle_lr:
+            return torch.optim.lr_scheduler.OneCycleLR(
+                optimizer=optimizer,
+                max_lr=self.learning_rate,          # Peaks at 0.001
+                total_steps=self.learning_iteration,# Total iterations (200,000)
+                pct_start=0.05,                      # Spends the first 10% (10,000 steps) warming up
+                div_factor=0.025,                    # Starts at max_lr / 25 (0.00004)
+                final_div_factor=1.0             # Ends at starting_lr / 1000
+            )
+        elif type_of_scheduler == self.cosine_annealing_warm_restarts:
+            return torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+                optimizer=optimizer,
+                T_0=50000,
+                eta_min=self.minimum_learning_rate
+            )
+        else:
+            return None
+
+    def export_run_to_csv(self, optimizer_name="SGD", scheduler_name="ReduceLROnPlateau", filename="experiment_logs.csv"):
+        """
+        Exports all relevant hyperparameters and final losses to a CSV file.
+        Appends a new row for each run. Creates headers if the file does not exist.
+        """
+
+        file_exists = os.path.isfile(filename)
+
+        # Compile all the data you want to track into a dictionary
+        run_data = {
+            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "Total_Parameters": self.total_number_of_parameters(),
+            "Context_Length": self.context_length,
+            "Feature_Dimension": self.feature_dimension,
+            "Hidden_Neurons": self.num_hidden_neuron,
+            "Batch_Size": self.training_batch_size,
+            "Max_Iterations": self.learning_iteration,
+            "Dropout_Probability": self.drop_out_layer_regularization_factor,
+            "L2_Lambda": self.l2_lambda,
+            "Optimizer": optimizer_name,
+            "Scheduler": scheduler_name,
+            "Max_Learning_Rate": self.learning_rate,
+            "Min_Learning_Rate": self.minimum_learning_rate,
+            "Train_Loss": round(self.train_loss, 4),
+            "Validation_Loss": round(self.validation_loss, 4),
+            "Test_Loss": round(self.test_loss, 4)
+        }
+
+        # Open the CSV file in 'append' mode
+        with open(filename, mode='a', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=run_data.keys())
+            
+            # Write the column headers only if this is a brand new file
+            if not file_exists:
+                writer.writeheader()
+                
+            # Write the data for the current run
+            writer.writerow(run_data)
+            
+        print(f"\n---> Run data successfully exported to {filename} <---")
