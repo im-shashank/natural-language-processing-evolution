@@ -2,3 +2,9 @@ neural probabilistic language model/main/__pycache__
 bi-gram language model/main/__pycache__
 .DS_Store
 wave-net language model/main/__pycache__
+GPT/main/__pycache__
+GPT/main/archived-code
+GPT/main/transformer/__pycache__
+GPT/main/transformer/decoder/__pycache__
+GPT/main/transformer/embedder/__pycache__
+GPT/main/transformer/encoder/__pycache__
