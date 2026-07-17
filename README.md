@@ -1,11 +1,15 @@
 # Language Models
 
-This repository contains from-scratch implementations of four language models in Python using PyTorch, progressing from simple statistical baselines to a full Transformer architecture:
+This repository contains from-scratch implementations of four language models in Python using PyTorch, progressing from simple statistical baselines to a full Transformer architecture.
 
-1. **Bigram Language Model** — A simple n-gram model that predicts the next character based on the previous character
-2. **Neural Probabilistic Language Model** — A neural network-based approach with embedding, hidden, and softmax layers
-3. **WaveNet Language Model** — A convolutional neural network with dilated convolutions for efficient sequence modelling
-4. **GPT (Transformer) Language Model** — A full encoder-decoder Transformer adapted for causal language modelling, based on *Attention Is All You Need* (Vaswani et al., 2017)
+| Model | Description |
+|---|---|
+| **[Bigram Language Model](bi-gram%20language%20model/README.md)** | A simple n-gram model that predicts the next character based on the previous character. |
+| **[Neural Probabilistic Language Model](neural%20probabilistic%20language%20model/README.md)** | A neural network-based approach with embedding, hidden, and softmax layers. |
+| **[WaveNet Language Model](wave-net%20language%20model/README.md)** | A convolutional neural network with dilated convolutions for efficient sequence modelling. |
+| **[GPT (Transformer) Language Model](GPT/README.md)** | A full encoder-decoder Transformer adapted for causal language modelling, based on *Attention Is All You Need*. |
+
+---
 
 ## Project Structure
 
@@ -26,7 +30,6 @@ This repository contains from-scratch implementations of four language models in
 │   └── README.md
 └── GPT/
     ├── main/                    # GPT class, tokenizer, transformer modules
-    │   └── transformer/         # Encoder, decoder, embedder sub-modules
     ├── resources/               # Shakespeare training corpus and generated output
     ├── weights/                 # Pretrained model checkpoint
     ├── experiment_logs.csv      # Hyperparameter and loss logs
@@ -35,9 +38,25 @@ This repository contains from-scratch implementations of four language models in
     └── README.md
 ```
 
+---
+
 ## Bigram Language Model
 
+**[📖 Read the full Bigram README](bi-gram%20language%20model/README.md)**
+
 The bigram language model is a simple character-level model that predicts the next character based on the previous character. It uses a lookup table approach to store transition probabilities between characters.
+
+### Architecture
+
+```mermaid
+flowchart TD
+    PrevChar["Previous Character (x)"] --> Lookup["Transition Probability Matrix"]
+    Lookup --> NextChar["Next Character Probabilities"]
+    
+    style PrevChar fill:#4a90d9,color:#fff
+    style Lookup fill:#2d6a4f,color:#fff
+    style NextChar fill:#e07b39,color:#fff
+```
 
 ### Features:
 - Character-level language modelling
@@ -51,9 +70,30 @@ cd bi-gram\ language\ model/main
 python main.py
 ```
 
+---
+
 ## Neural Probabilistic Language Model
 
+**[📖 Read the full Neural Probabilistic Model README](neural%20probabilistic%20language%20model/README.md)**
+
 The neural probabilistic language model uses a neural network to predict the next character in a sequence. It consists of embedding, hidden, and softmax layers.
+
+### Architecture
+
+```mermaid
+flowchart TD
+    Input["Context Characters"] --> Embed["Embedding Layer"]
+    Embed --> Concat["Concatenate Embeddings"]
+    Concat --> Hidden["Hidden Layer (Tanh)"]
+    Hidden --> Output["Output Layer (Softmax)"]
+    Output --> Prob["Next Character Probabilities"]
+
+    style Input fill:#4a90d9,color:#fff
+    style Embed fill:#7b2d8e,color:#fff
+    style Concat fill:#7b2d8e,color:#fff
+    style Hidden fill:#2d6a4f,color:#fff
+    style Output fill:#e07b39,color:#fff
+```
 
 ### Features:
 - Neural network-based language modelling
@@ -71,9 +111,37 @@ cd neural\ probabilistic\ language\ model/main
 python main.py
 ```
 
+---
+
 ## WaveNet Language Model
 
+**[📖 Read the full WaveNet README](wave-net%20language%20model/README.md)**
+
 The WaveNet language model implements a convolutional neural network architecture for sequence modelling. It uses dilated convolutions and residual connections to efficiently capture long-range dependencies in text data.
+
+### Architecture
+
+```mermaid
+flowchart TD
+    Input["Input Sequence"] --> Embed["Embedding Layer"]
+    Embed --> Conv1["Dilated Conv (dilation=1)"]
+    Conv1 --> Conv2["Dilated Conv (dilation=2)"]
+    Conv2 -.-> ConvN["Dilated Conv (dilation=N)"]
+    
+    Conv1 -- "Residual Connection" --> Conv2
+    Conv2 -- "Residual Connection" --> ConvN
+    
+    ConvN --> Flatten["Flatten"]
+    Flatten --> Linear["Linear Projection"]
+    Linear --> Output["Softmax Output"]
+
+    style Input fill:#4a90d9,color:#fff
+    style Embed fill:#7b2d8e,color:#fff
+    style Conv1 fill:#2d6a4f,color:#fff
+    style Conv2 fill:#2d6a4f,color:#fff
+    style ConvN fill:#2d6a4f,color:#fff
+    style Output fill:#e07b39,color:#fff
+```
 
 ### Features:
 - Character-level language modelling
@@ -90,9 +158,34 @@ cd wave-net\ language\ model/main
 python main.py
 ```
 
+---
+
 ## GPT (Transformer) Language Model
 
+**[📖 Read the full GPT README](GPT/README.md)**
+
 A from-scratch implementation of the full Transformer architecture from [Attention Is All You Need](GPT/Attention%20is%20all%20you%20need.pdf), adapted for character-level causal language modelling on Shakespeare text. The model uses an encoder-decoder structure with causal masking on all three attention mechanisms (encoder self-attention, decoder self-attention, and cross-attention) to prevent future-token leakage.
+
+### Architecture
+
+```mermaid
+flowchart TD
+    X["Input tokens (x)"] --> SE["Scaled Embedding + Positional Encoding"]
+    SE --> E["Encoder\n(N × Self-Attention + FFN)"]
+    X --> SD["Scaled Embedding + Positional Encoding"]
+    SD --> D["Decoder\n(N × Masked Self-Attn + Cross-Attn + FFN)"]
+    E -- "encoder_output\n(cross-attention)" --> D
+    D --> L["Linear (d_model → vocab_size)"]
+    L --> Logits
+    Y["Target tokens (y)\n(x shifted by 1)"] --> Loss
+    Logits --> Loss["CrossEntropyLoss"]
+
+    style X fill:#4a90d9,color:#fff
+    style Y fill:#d94a4a,color:#fff
+    style E fill:#2d6a4f,color:#fff
+    style D fill:#7b2d8e,color:#fff
+    style Loss fill:#e07b39,color:#fff
+```
 
 ### Features:
 - Full encoder-decoder Transformer with multi-head attention
@@ -111,7 +204,7 @@ cd GPT/main
 python main.py
 ```
 
-See the [GPT README](GPT/README.md) for a detailed architecture walkthrough, causal masking explanation, experiment results, and loss curve analysis.
+---
 
 ## Requirements
 
