@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-from embedder.scaled_embedding import ScaledEmbedding
-from embedder.positional_encoding import PositionalEncoding
-from .transformer_decoder_layer import TransformerDecoderLayer
+from transformer.embedder.scaled_embedding import ScaledEmbedding
+from transformer.embedder.positional_encoding import PositionalEncoding
+from transformer.decoder.transformer_decoder_layer import TransformerDecoderLayer
 
 class Decoder(nn.Module):
     def __init__(self, vocab_size, d_model, max_len, n_heads, n_layers, device='cpu', dropout=0.1):
@@ -17,7 +17,7 @@ class Decoder(nn.Module):
             for _ in range(n_layers)
         ])
 
-    def forward(self, y, encoder_output, tgt_mask=None, tgt_pad_mask=None, memory_pad_mask=None):
+    def forward(self, y, encoder_output, tgt_mask=None, tgt_pad_mask=None, memory_mask=None, memory_pad_mask=None):
         # Embed the target sequence
         y = self.embedding(y)
         y = self.pos_encoding(y)
@@ -25,6 +25,6 @@ class Decoder(nn.Module):
 
         # Pass y AND encoder_output through each decoder layer sequentially
         for layer in self.layers:
-            y = layer(y, encoder_output, tgt_mask, tgt_pad_mask, memory_pad_mask)
+            y = layer(y, encoder_output, tgt_mask, tgt_pad_mask, memory_mask, memory_pad_mask)
 
         return y

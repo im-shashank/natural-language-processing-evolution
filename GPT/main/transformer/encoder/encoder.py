@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 
-from embedder.scaled_embedding import ScaledEmbedding
-from embedder.positional_encoding import PositionalEncoding
-from .transformer_encoder_layer import TransformerEncoderLayer
+from transformer.embedder.scaled_embedding import ScaledEmbedding
+from transformer.embedder.positional_encoding import PositionalEncoding
+from transformer.encoder.transformer_encoder_layer import TransformerEncoderLayer
 
 # Assuming ScaledEmbedding and PositionalEmbedding are imported or defined above
 class Encoder(nn.Module):
@@ -20,7 +20,7 @@ class Encoder(nn.Module):
             for _ in range(n_layers)
         ])
 
-    def forward(self, x, mask=None):
+    def forward(self, x, attn_mask=None, key_padding_mask=None):
         # Pass through embedding and scale it
         x = self.embedding(x)
         # Add positional embedding
@@ -29,6 +29,6 @@ class Encoder(nn.Module):
         
         # Pass through each encoder layer sequentially
         for layer in self.layers:
-            x = layer(x, mask)
+            x = layer(x, attn_mask=attn_mask, key_padding_mask=key_padding_mask)
             
         return x

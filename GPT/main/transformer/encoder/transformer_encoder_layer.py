@@ -15,9 +15,9 @@ class TransformerEncoderLayer(nn.Module):
         self.dropout1 = nn.Dropout(dropout)
         self.dropout2 = nn.Dropout(dropout)
     
-    def forward(self, x, mask=None):
-        # 1. Self-Attention + Residual Connection
-        attn_output, _ = self.mha(x, x, x, key_padding_mask=mask)
+    def forward(self, x, attn_mask=None, key_padding_mask=None):
+        # 1. Self-Attention + Residual Connection (attn_mask = causal look-ahead mask)
+        attn_output, _ = self.mha(x, x, x, attn_mask=attn_mask, key_padding_mask=key_padding_mask)
         x = self.layernorm1(x + self.dropout1(attn_output))
         
         # 2. Feed-Forward + Residual Connection
