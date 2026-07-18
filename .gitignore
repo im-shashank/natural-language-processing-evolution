@@ -8,3 +8,6 @@ GPT/main/transformer/__pycache__
 GPT/main/transformer/decoder/__pycache__
 GPT/main/transformer/embedder/__pycache__
 GPT/main/transformer/encoder/__pycache__
+GPT-2/main/tokenizer/__pycache__
+GPT-2/main/model/__pycache__
+GPT-2/main/__pycache__

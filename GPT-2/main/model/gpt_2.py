@@ -1,11 +1,18 @@
 import os
+import torch
 
 from tokenizer.tokenizer import Tokenizer
 
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class GPT2:
+    """A GPT-2 language model implementation.
+    
+    This class orchestrates the tokenizer, model training, validation, and loss calculation.
+    """
+    
     def __init__(self):
+        """Initializes the GPT-2 model hyperparameters and tokenizer."""
         self.hyperparamters = {
             "compression_ratio": 1.5
         }
@@ -18,8 +25,10 @@ class GPT2:
         text2 = "Hello world"
         encoded = self.tokenizer.encode(text1)
         decoded = self.tokenizer.decode(encoded=encoded)
+        print(decoded)
 
     def validate_model(self):
+        """Validates the model against a validation dataset."""
         pass
 
     def train_model(
@@ -29,7 +38,23 @@ class GPT2:
         validation_src_dataset, 
         validation_target_dataset
     ):
+        """Trains the GPT-2 model.
+        
+        Args:
+            training_src_dataset: The dataset used for training source inputs.
+            training_target_dataset: The dataset used for training target labels.
+            validation_src_dataset: The dataset used for validation source inputs.
+            validation_target_dataset: The dataset used for validation target labels.
+        """
         pass
 
     def calculate_loss(self, logits):
+        """Calculates the loss for the model predictions.
+        
+        Args:
+            logits (Tensor): The raw model outputs (logits).
+            
+        Returns:
+            Tensor: The calculated loss value.
+        """
         pass
