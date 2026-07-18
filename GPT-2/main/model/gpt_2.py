@@ -23,9 +23,18 @@ class GPT2:
     def __call__(self):
         text1 = "Ｕｎｉｃｏｄｅ! 🅤🅝🅘🅒🅞🅓🅔‽ 🇺‌🇳‌🇮‌🇨‌🇴‌🇩‌🇪! 😄 The very name strikes fear and awe into the hearts of programmers worldwide. We all know we ought to “support Unicode” in our software (whatever that means—like using wchar_t for all the strings, right?). But Unicode can be abstruse, and diving into the thousand-page Unicode Standard plus its dozens of supplementary annexes, reports, and notes can be more than a little intimidating. I don’t blame programmers for still finding the whole thing mysterious, even 30 years after Unicode’s inception."
         text2 = "Hello world"
-        encoded = self.tokenizer.encode(text1)
-        decoded = self.tokenizer.decode(encoded=encoded)
-        print(decoded)
+        text3 = "My name is shashank bhardwaj"
+
+        self.tokenizer.train(text2)
+        
+        encoded2 = self.tokenizer.encode(text2)
+        encoded3 = self.tokenizer.encode(text3)
+
+        
+        decoded2 = self.tokenizer.decode(encoded=encoded2)
+        print(decoded2)
+        decoded3 = self.tokenizer.decode(encoded=encoded3)
+        print(decoded3)
 
     def validate_model(self):
         """Validates the model against a validation dataset."""
