@@ -50,8 +50,8 @@ class Transformer(nn.Module):
         # (upper triangle above the diagonal = future tokens).
         return torch.triu(torch.ones(size_q, size_k, dtype=torch.bool, device=device), diagonal=1)
 
-    def set_src_vocab_size(self, src_vocab_size:0):
+    def set_src_vocab_size(self, src_vocab_size):
         self.src_vocab_size = src_vocab_size
 
-    def set_tgt_vocab_size(self, tgt_vocab_size:0):
+    def set_tgt_vocab_size(self, tgt_vocab_size):
         self.tgt_vocab_size = tgt_vocab_size

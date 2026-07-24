@@ -11,3 +11,9 @@ GPT/main/transformer/encoder/__pycache__
 GPT-2/main/tokenizer/__pycache__
 GPT-2/main/model/__pycache__
 GPT-2/main/__pycache__
+GPT-2/main/model/transformer/__pycache__
+GPT-2/main/tokenizer/python_based_tokenizer/__pycache__
+GPT-2/main/plot/__pycache__
+GPT-2/archived_code/python_based_tokenizer/__pycache__
+GPT-2/main/model/transformer/embedder/__pycache__
+GPT-2/main/model/transformer/decoder/__pycache__
